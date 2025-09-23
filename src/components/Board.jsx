@@ -15,9 +15,8 @@ const Board = ({board, selected, onSquareClick}) => {
               isDark={isDark}
               isSelected={isSelected}
               onClick={() => onSquareClick(rIdx, cIdx)}
-            >
-              {cell !== 0 && <Piece type={cell} />}
-            </Square>
+              childern={cell !== 0 && <Piece type={cell} />}
+            />
           );
         })
       )}
