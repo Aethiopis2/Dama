@@ -6,24 +6,20 @@
  * @date 23rd of Septemeber 2025, Tuesday
  */
 
-import { applyMove, BOARD_SIZE, getAllMoves, isKing, pieceOwner, PLAYER1, PLAYER2 } from "./gameLogic";
+import { BOARD_SIZE, getValidMoves, makeMove, PLAYER1, PLAYER2 } from "./gameLogic";
 
 
 // evaluation function
-function evaluateBoard(board, aiPlayer) {
+function evaluateBoard(board) {
     let score = 0;
-    const opp = aiPlayer === PLAYER1 ? PLAYER2 : PLAYER1;
 
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const piece = board[r][c];
             if (!piece) continue;
 
-            const owner = pieceOwner(piece);
-            const king = isKing(piece);
-
-            if (owner == aiPlayer) score += king ? 5 : 3;
-            else if (owner === opp) score -= king ? 5 : 3;
+            const val = piece.king ? 3 : 1;
+            score += piece.player === PLAYER1 ? val : -val;
         } // end for c
     } // end for r
 
@@ -32,56 +28,53 @@ function evaluateBoard(board, aiPlayer) {
 
 
 // minmax with alpha-beta prunning
-function minMax(board, depth, alpha, beta, maximizing, aiPlayer) {
-    const opp = aiPlayer === PLAYER1 ? PLAYER2 : PLAYER1;
+function minMax(board, depth, maximizing, alpha, beta) {
+    const player = maximizing ? PLAYER1 : PLAYER2;
+    const moves = getValidMoves(board, player);
 
-    if (depth === 0) {
-        return {score: evaluateBoard(board, aiPlayer)};
+    if (depth === 0 || moves.length === 0) {
+        return {score: evaluateBoard(board)};
     } // end if
 
-    const currentPlayer = maximizing ? aiPlayer : opp;
-    const moves = getAllMoves(board, currentPlayer);
-
-    if (moves.length === 0) {
-        return {score: maximizing ? -9999 : 9999};  // losing state
-    } // end if no more moves
-
     let bestMove = null;
+
     if (maximizing) {
         let maxVal = -Infinity;
-        for (const {from, move} of moves) {
-            const newBoard = applyMove(board, from[0], from[1], move);
-            const evalResult = minMax(newBoard, depth - 1, alpha, beta, false, aiPlayer);
-            if (evalResult.score > maxVal) {
-                maxVal = evalResult.score;
-                bestMove = {from, move};
+        for (const move of moves) {
+            const { newBoard } = makeMove(board, move);
+            const evalResult = minMax(newBoard, depth - 1, false, alpha, beta).score;
+            if (evalResult > maxVal) {
+                maxVal = evalResult;
+                bestMove = move;
             } // end if evaluate score
 
-            alpha = Math.max(alpha, evalResult.score);
+            alpha = Math.max(alpha, evalResult);
             if (beta <= alpha) break;
         } // end for moves
 
-        return {score: maxVal, bestMove};
+        return {score: maxVal, move: bestMove};
     } // end if maximizing
     else {
         let minVal = Infinity;
         for (const {from, move} of moves) {
-            const newBoard = applyMove(board, from[0], from[1], move);
-            const evalResult = minMax(board, depth - 1, alpha, beta, true, aiPlayer);
-            if (evalResult.score < minVal) {
+            const { newBoard } = makeMove(board, move);
+            const evalResult = minMax(newBoard, depth - 1, false, alpha, beta).score;
+            if (evalResult < minVal) {
                 minVal = evalResult.score;
-                bestMove = {from, move};
+                bestMove = move;
             } // end if
             
-            beta = Math.min(beta, evalResult.score);
+            beta = Math.min(beta, evalResult);
             if (beta <= alpha) break;
         } // end for
         
-        return {score: minVal, bestMove};
+        return {score: minVal, move: bestMove};
     } // end else minimizing
 } // end minMax
 
 
-export function findBestMove(board, aiPlayer, depth = 4) {
-  return minMax(board, depth, -Infinity, Infinity, true, aiPlayer).bestMove;
+export function aiMove(board, player) {
+    const depth = 4;        // change this here
+    const { move } = minMax(board, depth, player === PLAYER1, -Infinity, Infinity);
+    return move;
 } // end findBestMove

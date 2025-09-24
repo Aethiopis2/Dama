@@ -1,110 +1,117 @@
 // src/App.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Board from "./components/Board";
 import {
   initBoard,
   getValidMoves,
-  applyMove,
-  hasAnyCaptures,
-  pieceOwner,
   PLAYER1,
   PLAYER2,
+  makeMove,
 } from "./logic/gameLogic";
+import { aiMove } from "./logic/aiLogic";
 
 export default function App() {
   const [board, setBoard] = useState(initBoard);
   const [selected, setSelected] = useState(null);        // [r,c] or null
   const [validMoves, setValidMoves] = useState([]);      // moves for selected piece
-  const [turn, setTurn] = useState(PLAYER1);
+  const [player, setPlayer] = useState(PLAYER1);
+  const [gameOver, setGameOver] = useState(false);
+  const [winner, setWinner] = useState(null);
+
+  // check for win/loss after every turn
+  useEffect(() => {
+    const movesLeft = getValidMoves(board, player);
+    if (movesLeft === 0) {
+      setGameOver(true);
+      setWinner(player === PLAYER2 ? PLAYER2 : PLAYER1);
+    } // end if
+  }, [board, player]);
+
+  // ai plays at ticks on its turn
+  useEffect(() => {
+    if (!gameOver && player === PLAYER1) {
+      const timer = setTimeout(() => {
+        const bestMove = aiMove(board, PLAYER1);
+        if (bestMove) {
+          const { newBoard, nextPlayer } = makeMove(board, bestMove);
+          setBoard(newBoard);
+          setPlayer(nextPlayer);
+        } // end if bestMove
+        else {
+          setGameOver(true);
+          setWinner(PLAYER1);
+        } // end else
+      }, 500);
+
+      return () => clearTimeout(timer);
+    } // end if 
+  }, [player, board, gameOver]);
 
   function handleSquareClick(row, col) {
-    // 1) Nothing selected -> try select a piece that belongs to current player
-    if (!selected) {
-      const piece = board[row][col];
-      if (pieceOwner(piece) === turn) {
-        const moves = getValidMoves(board, turn, row, col);
-        const mustCapture = hasAnyCaptures(board, turn);
-        const filtered = mustCapture ? moves.filter(m => m.capture) : moves;
-
-        if (filtered.length > 0) {
-          setSelected([row, col]);
-          setValidMoves(filtered);
+    if (gameOver || player !== "R") return;
+    if (selected) {
+      const move = validMoves.find((m) => m.to.row === row && m.to.col === col);
+      if (move) {
+        const { newBoard, nextPlayer, moreCaptures } = makeMove(board, move);
+        setBoard(newBoard);
+        setSelected(null);
+        setValidMoves([]);
+        if (moreCaptures) {
+          // Let player continue capturing if possible
+          setSelected(move.to);
+          setValidMoves(getValidMoves(newBoard, "R", move.to));
         } else {
-          // piece has no legal moves -> keep nothing selected
-          setSelected(null);
-          setValidMoves([]);
+          setPlayer(nextPlayer);
         }
-      }
-      return;
-    }
-
-    // 2) Clicked the same selected square -> deselect
-    if (selected[0] === row && selected[1] === col) {
-      setSelected(null);
-      setValidMoves([]);
-      return;
-    }
-
-    // 3) If clicked a valid destination -> perform the move
-    const chosenMove = validMoves.find(m => m.tr === row && m.tc === col);
-    if (chosenMove) {
-      // compute the resulting board synchronously so we can inspect further moves
-      const newBoard = applyMove(board, selected[0], selected[1], chosenMove);
-      setBoard(newBoard);
-
-      if (chosenMove.capture) {
-        // If the move was a capture, check whether the moved piece can capture again
-        const further = getValidMoves(newBoard, turn, chosenMove.tr, chosenMove.tc)
-          .filter(m => m.capture);
-
-        if (further.length > 0) {
-          // More captures available -> same player continues, new selection is landing square
-          setSelected([chosenMove.tr, chosenMove.tc]);
-          setValidMoves(further);
-          return;
-        }
-      }
-
-      // No further captures (or the move wasn't a capture) -> switch turn
-      setSelected(null);
-      setValidMoves([]);
-      setTurn(prev => (prev === PLAYER1 ? PLAYER2 : PLAYER1));
-      return;
-    }
-
-    // 4) Clicked another friendly piece while something selected -> switch selection
-    const clickedPiece = board[row][col];
-    if (pieceOwner(clickedPiece) === turn) {
-      const moves = getValidMoves(board, turn, row, col);
-      const mustCapture = hasAnyCaptures(board, turn);
-      const filtered = mustCapture ? moves.filter(m => m.capture) : moves;
-      if (filtered.length > 0) {
-        setSelected([row, col]);
-        setValidMoves(filtered);
       } else {
         setSelected(null);
         setValidMoves([]);
       }
-      return;
+    } else {
+      const piece = board[row][col];
+      if (piece && piece.color === "R") {
+        setSelected({ row, col });
+        setValidMoves(getValidMoves(board, "R", { row, col }));
+      }
     }
+  }
 
-    // 5) Otherwise click was invalid -> deselect
+  function restartGame() {
+    setBoard(initBoard());
     setSelected(null);
     setValidMoves([]);
+    setPlayer("R");
+    setGameOver(false);
+    setWinner(null);
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen bg-gray-900">
-      <h1 className="text-white mb-4 text-2xl">
-        {turn === PLAYER1 ? "🔴 Red's Turn" : "⚫ Black's Turn"}
-      </h1>
-
+    <div className="flex flex-col items-center p-4 gap-4">
+      <h1 className="text-2xl font-bold">Dama / Checkers</h1>
       <Board
         board={board}
         selected={selected}
         validMoves={validMoves}
         onSquareClick={handleSquareClick}
       />
+      {gameOver && (
+        <div className="text-center">
+          <p className="text-lg font-semibold">
+            {winner === "R"
+              ? "🎉 You Win!"
+              : winner === "B"
+              ? "😢 You Lose!"
+              : "🤝 Draw!"}
+          </p>
+          <button
+            onClick={restartGame}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Restart Game
+          </button>
+        </div>
+      )}
+      {!gameOver && <p className="italic">Current Turn: {player}</p>}
     </div>
   );
 }
