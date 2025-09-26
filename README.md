@@ -22,10 +22,7 @@ A fully playable **Dama / Checkers game** built in React with **2D and 3D render
 ## 🖥️ Demo
 
 Check out the live demo deployed on Vercel:  
-
-[**Play Dama / 3D Checkers**](https://your-vercel-project-link.vercel.app)  
-
-*(Replace with your actual Vercel deployment URL)*
+https://dama-beta.vercel.app/
 
 ---
 
@@ -34,5 +31,5 @@ Check out the live demo deployed on Vercel:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/dama-react.git
+git clone https://github.com/Aethiopis2/Dama.git
 cd dama-react
