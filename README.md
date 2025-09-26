@@ -1,12 +1,38 @@
-# React + Vite
+# Dama / 3D Checkers
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fully playable **Dama / Checkers game** built in React with **2D and 3D rendering** using `react-three-fiber`. Features include AI opponent, multi-jump rules, king promotion, animations, and responsive controls. Designed as a portfolio project to showcase React, Three.js, and game logic skills.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🎮 Features
 
-## Expanding the ESLint configuration
+- **Classic Dama rules**: multi-jump, king promotion, turn-based gameplay.
+- **2D and 3D modes**: switchable via toggle button.
+- **AI opponent**: uses Minimax with alpha-beta pruning.
+- **Difficulty control**: adjustable AI depth slider.
+- **Animations**:
+  - Piece movement interpolation
+  - Glow highlights for selected pieces and valid moves
+  - Particle/fade-out effects for captured pieces
+- **Restart functionality** for new games.
+- **Responsive layout** with split-screen design: board on left, controls on right.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🖥️ Demo
+
+Check out the live demo deployed on Vercel:  
+
+[**Play Dama / 3D Checkers**](https://your-vercel-project-link.vercel.app)  
+
+*(Replace with your actual Vercel deployment URL)*
+
+---
+
+## ⚙️ Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/dama-react.git
+cd dama-react
