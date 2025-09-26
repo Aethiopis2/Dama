@@ -31,7 +31,7 @@ function evaluateBoard(board) {
 function minMax(board, depth, maximizing, alpha, beta) {
     const player = maximizing ? PLAYER1 : PLAYER2;
     const moves = getValidMoves(board, player);
-
+    
     if (depth === 0 || moves.length === 0) {
         return {score: evaluateBoard(board)};
     } // end if
@@ -56,11 +56,12 @@ function minMax(board, depth, maximizing, alpha, beta) {
     } // end if maximizing
     else {
         let minVal = Infinity;
-        for (const {from, move} of moves) {
+        for (const move of moves) {
             const { newBoard } = makeMove(board, move);
-            const evalResult = minMax(newBoard, depth - 1, false, alpha, beta).score;
+            const evalResult = minMax(newBoard, depth - 1, true, alpha, beta).score;
+            
             if (evalResult < minVal) {
-                minVal = evalResult.score;
+                minVal = evalResult;
                 bestMove = move;
             } // end if
             
@@ -72,9 +73,7 @@ function minMax(board, depth, maximizing, alpha, beta) {
     } // end else minimizing
 } // end minMax
 
-
-export function aiMove(board, player) {
-    const depth = 4;        // change this here
+export function aiMove(board, player, depth) {
     const { move } = minMax(board, depth, player === PLAYER1, -Infinity, Infinity);
     return move;
 } // end findBestMove
